@@ -74,7 +74,7 @@ export const Guitar: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto my-8 select-none">
+    <div className="relative w-full max-w-2xl mx-auto my-8 select-none touch-none">
       {/* Guitar Body Representation */}
       <div className="relative bg-wood-700 rounded-3xl shadow-2xl overflow-hidden border-4 border-wood-900 aspect-[4/3] md:aspect-[2/1] flex flex-col items-center justify-center">
         

@@ -1,15 +1,18 @@
+import { useState } from 'react';
 import { Guitar } from './components/Guitar';
 import { Features } from './components/Features';
 import { Testimonials } from './components/Testimonials';
 import { Instructor } from './components/Instructor';
 import { FAQ } from './components/FAQ';
-import { CheckCircle, Phone, ArrowRight, Music2, Facebook, Instagram, Youtube } from 'lucide-react';
+import { CheckCircle, Phone, ArrowRight, Music2, Facebook, Instagram, Youtube, Maximize2, X } from 'lucide-react';
 
 const WHATSAPP_NUMBER = "5511999999999"; // Replace with real number
 const WHATSAPP_MSG = "Olá! Gostaria de saber mais sobre as aulas de violão.";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MSG)}`;
 
 function App() {
+  const [isGuitarModalOpen, setIsGuitarModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-wood-50">
       
@@ -118,18 +121,35 @@ function App() {
               </div>
             </div>
 
-            {/* Interactive Guitar */}
+            {/* Interactive Guitar Wrapper */}
             <div className="relative perspective-1000">
                {/* Decorative background blobs */}
                <div className="absolute -top-20 -right-20 w-72 h-72 bg-wood-300 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-pulse-slow"></div>
                <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-amber-300 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-pulse-slow animation-delay-2000"></div>
                
-               <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-[2rem] shadow-2xl border border-white/50 transform rotate-1 transition-transform duration-500 hover:rotate-0">
+               {/* Desktop: Show Guitar Directly */}
+               <div className="hidden lg:block relative bg-white/80 backdrop-blur-sm p-6 rounded-[2rem] shadow-2xl border border-white/50 transform rotate-1 transition-transform duration-500 hover:rotate-0">
                  <div className="absolute -top-3 -right-3 bg-wood-600 text-white text-[10px] font-bold px-4 py-1.5 rounded-full shadow-lg z-30 tracking-widest uppercase">
                     Toque as cordas
                  </div>
                  <h3 className="text-center font-bold text-wood-300 text-xs mb-4 uppercase tracking-[0.3em]">Simulador Interativo</h3>
                  <Guitar />
+               </div>
+
+               {/* Mobile: Show Launcher Card */}
+               <div className="lg:hidden relative bg-white/80 backdrop-blur-sm p-8 rounded-[2rem] shadow-2xl border border-white/50 text-center">
+                  <div className="w-20 h-20 bg-wood-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Music2 className="w-10 h-10 text-wood-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Simulador de Violão</h3>
+                  <p className="text-gray-500 text-sm mb-6">Experimente tocar agora mesmo no seu celular sem sair da página.</p>
+                  <button 
+                    onClick={() => setIsGuitarModalOpen(true)}
+                    className="w-full py-4 bg-wood-600 text-white rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-wood-700 transition-all shadow-lg active:scale-95"
+                  >
+                    <Maximize2 className="w-5 h-5" />
+                    Abrir Simulador
+                  </button>
                </div>
             </div>
 
@@ -218,11 +238,39 @@ function App() {
         href={WHATSAPP_LINK}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 md:hidden z-50 bg-green-500 text-white p-4 rounded-full shadow-2xl hover:bg-green-600 transition-colors animate-bounce"
+        className="fixed bottom-6 right-6 md:hidden z-40 bg-green-500 text-white p-4 rounded-full shadow-2xl hover:bg-green-600 transition-colors animate-bounce"
         aria-label="Fale conosco no WhatsApp"
       >
         <Phone className="w-6 h-6" />
       </a>
+
+      {/* Mobile Guitar Modal */}
+      {isGuitarModalOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in-up">
+          <button 
+            onClick={() => setIsGuitarModalOpen(false)}
+            className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 p-2 rounded-full transition-colors"
+          >
+            <X size={32} />
+          </button>
+          
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-wood-100 mb-2">Modo Interativo</h3>
+            <p className="text-gray-400 text-sm">Toque nas cordas para ouvir</p>
+          </div>
+
+          <div className="w-full max-w-lg">
+             <Guitar />
+          </div>
+
+          <button 
+            onClick={() => setIsGuitarModalOpen(false)}
+            className="mt-8 px-8 py-3 bg-wood-600 text-white rounded-full font-bold uppercase tracking-wider text-sm shadow-lg hover:bg-wood-500"
+          >
+            Fechar Simulador
+          </button>
+        </div>
+      )}
 
     </div>
   );
