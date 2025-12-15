@@ -14,6 +14,7 @@ const STRING_NAMES = ["e", "B", "G", "D", "A", "E"];
 
 export const Guitar: React.FC = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
+  const lastPlayedStringRef = useRef<number | null>(null); // Track last played string for strumming
   const [vibratingString, setVibratingString] = useState<number | null>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
 
@@ -73,6 +74,35 @@ export const Guitar: React.FC = () => {
     oscillator.stop(now + 2.0);
   }, []);
 
+  // Handle touch interactions (Tap and Slide/Strum)
+  const handleTouch = useCallback((e: React.TouchEvent) => {
+    // Attempt to init audio on first touch if not already active
+    if (e.type === 'touchstart') {
+      initAudio();
+    }
+
+    const touch = e.touches[0];
+    // Identify which element is under the finger
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    // Check if it's one of our string elements (or child of one)
+    const stringDiv = element?.closest('[data-string-index]');
+    
+    if (stringDiv) {
+      const index = parseInt(stringDiv.getAttribute('data-string-index') || '-1', 10);
+      
+      // Play only if it's a valid string and distinct from the last one played in this sequence
+      // This prevents machine-gun repeating while holding finger on one string, 
+      // but allows re-playing if you move off and back on.
+      if (index !== -1 && index !== lastPlayedStringRef.current) {
+        playNote(STRING_FREQUENCIES[index], index);
+        lastPlayedStringRef.current = index;
+      }
+    } else {
+      // Finger is in the gap between strings
+      lastPlayedStringRef.current = null;
+    }
+  }, [playNote]);
+
   return (
     <div className="relative w-full max-w-2xl mx-auto my-8 select-none touch-none">
       {/* Guitar Body Representation */}
@@ -90,9 +120,14 @@ export const Guitar: React.FC = () => {
         {/* Bridge (Stylized) */}
         <div className="absolute bottom-0 w-1/4 h-16 bg-wood-900 rounded-t-lg z-10 border-t-4 border-wood-300 shadow-lg"></div>
 
-        {/* Strings Container */}
-        <div className="absolute inset-0 flex flex-col justify-center space-y-6 md:space-y-8 z-20 py-10"
-             onMouseLeave={() => setVibratingString(null)}>
+        {/* Strings Container - Handles Touch Events for Strumming */}
+        <div 
+          className="absolute inset-0 flex flex-col justify-center space-y-6 md:space-y-8 z-20 py-10"
+          onMouseLeave={() => setVibratingString(null)}
+          onTouchStart={handleTouch}
+          onTouchMove={handleTouch}
+          onTouchEnd={() => { lastPlayedStringRef.current = null; }}
+        >
           
           {!isAudioEnabled && (
             <div 
@@ -114,12 +149,9 @@ export const Guitar: React.FC = () => {
             return (
               <div
                 key={index}
+                data-string-index={index}
                 className="relative w-full h-10 flex items-center group cursor-pointer"
                 onMouseEnter={() => playNote(freq, index)}
-                onTouchStart={(e) => {
-                  e.preventDefault(); // Prevent scrolling on mobile while playing
-                  playNote(freq, index);
-                }}
               >
                 {/* Visual String */}
                 <div 
@@ -132,10 +164,10 @@ export const Guitar: React.FC = () => {
                   }}
                 >
                     {/* Light reflection on string */}
-                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/50"></div>
+                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/50 pointer-events-none"></div>
                 </div>
                 
-                {/* String Name Label (Hidden on mobile usually, visible here for education) */}
+                {/* String Name Label */}
                 <span className="absolute left-4 text-white/50 font-mono text-xs select-none pointer-events-none">
                   {STRING_NAMES[index]}
                 </span>
@@ -145,7 +177,7 @@ export const Guitar: React.FC = () => {
         </div>
       </div>
       <p className="text-center text-wood-600 mt-4 text-sm font-medium">
-        {isAudioEnabled ? "Passe o mouse ou toque nas cordas para ouvir!" : "Ative o som para uma experiência imersiva"}
+        {isAudioEnabled ? "Passe o mouse ou deslize o dedo nas cordas para tocar!" : "Ative o som para uma experiência imersiva"}
       </p>
     </div>
   );
