@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aprenda Violão Hoje - Método Exclusivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              wood: {
+                50: '#fbf7f1',
+                100: '#f5eadb',
+                200: '#ebd2b6',
+                300: '#deb28a',
+                400: '#d08c5e',
+                500: '#c76d3b',
+                600: '#ba5630',
+                700: '#9b4329',
+                800: '#7f3826',
+                900: '#673022',
+              }
+            },
+            animation: {
+              'vibrate': 'vibrate 0.3s cubic-bezier(.36,.07,.19,.97) both',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              vibrate: {
+                '10%, 90%': { transform: 'translate3d(0, -1px, 0)' },
+                '20%, 80%': { transform: 'translate3d(0, 2px, 0)' },
+                '30%, 50%, 70%': { transform: 'translate3d(0, -4px, 0)' },
+                '40%, 60%': { transform: 'translate3d(0, 4px, 0)' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Custom scrollbar for a polished look */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d08c5e;
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #ba5630;
+      }
+      .guitar-string {
+        transition: transform 0.1s, filter 0.2s;
+      }
+      .guitar-string:hover {
+        filter: brightness(1.5);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-wood-50 text-gray-800 antialiased">
+    <div id="root"></div>
+  </body>
+</html>
