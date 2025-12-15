@@ -4,6 +4,7 @@ import { Features } from './components/Features';
 import { Testimonials } from './components/Testimonials';
 import { Instructor } from './components/Instructor';
 import { FAQ } from './components/FAQ';
+import { BackgroundMusic } from './components/BackgroundMusic';
 import { CheckCircle, Phone, ArrowRight, Music2, Facebook, Instagram, Youtube, Maximize2, X } from 'lucide-react';
 
 const WHATSAPP_NUMBER = "5511999999999"; // Replace with real number
@@ -15,6 +16,9 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-wood-50">
+      
+      {/* Background Ambience Music */}
+      <BackgroundMusic />
       
       {/* Sophisticated Floating Navbar */}
       <div className="fixed top-0 w-full z-50 px-4 py-4 md:py-6 flex justify-center">
