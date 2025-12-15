@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aprenda Violão Hoje - Método Exclusivo</title>
+    
+    <!-- MANTENDO O TAILWIND CDN COMO SOLICITADO -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -26,6 +28,7 @@
             animation: {
               'vibrate': 'vibrate 0.3s cubic-bezier(.36,.07,.19,.97) both',
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
             },
             keyframes: {
               vibrate: {
@@ -33,6 +36,10 @@
                 '20%, 80%': { transform: 'translate3d(0, 2px, 0)' },
                 '30%, 50%, 70%': { transform: 'translate3d(0, -4px, 0)' },
                 '40%, 60%': { transform: 'translate3d(0, 4px, 0)' }
+              },
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
               }
             }
           }
@@ -60,19 +67,26 @@
       .guitar-string:hover {
         filter: brightness(1.5);
       }
+      html {
+        scroll-behavior: smooth;
+      }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
   <body class="bg-wood-50 text-gray-800 antialiased">
     <div id="root"></div>
+    <!-- Esta linha faz a mágica acontecer no Vercel -->
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
