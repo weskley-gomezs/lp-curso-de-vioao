@@ -6,72 +6,118 @@ export const BackgroundMusic: React.FC = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const nextNoteTimeRef = useRef<number>(0);
   const timerIDRef = useRef<number | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const isUserPausedRef = useRef(false);
+  
+  // Controle de estado musical
+  const currentNoteIndexRef = useRef(0);
+  const currentChordIndexRef = useRef(0);
 
-  // E Major Pentatonic Scale frequencies (Dreamy, Acoustic vibe)
-  const NOTES = [
-    164.81, // E3
-    185.00, // F#3
-    207.65, // G#3
-    246.94, // B3
-    277.18, // C#4
-    329.63, // E4
-    415.30, // G#4
-    493.88, // B4
+  // --- CONFIGURAÇÃO MUSICAL ---
+  
+  // Progressão de Acordes (Frequências das cordas para cada acorde)
+  // Formato: [Baixo, Corda 3, Corda 2, Corda 1]
+  const CHORDS = [
+    [164.81, 196.00, 246.94, 329.63], // Em (Mi menor)
+    [130.81, 196.00, 261.63, 329.63], // C7M (Dó com Sétima Maior)
+    [196.00, 196.00, 246.94, 293.66], // G (Sol Maior)
+    [146.83, 220.00, 293.66, 369.99], // D (Ré Maior)
   ];
 
-  // Initialize AudioContext lazily
+  // Padrão de Dedilhado (Índices do array do acorde)
+  // 0 = Baixo, 1 = Meio, 2 = Agudo, 3 = Muito Agudo
+  // Padrão simples: Baixo -> 3 -> 2 -> 1 -> 2 -> 3 (Compasso 6/8 lento)
+  const ARPEGGIO_PATTERN = [0, 1, 2, 3, 2, 1];
+  
+  const TEMPO = 90; // BPM
+  const SECONDS_PER_BEAT = 60 / TEMPO;
+  const NOTE_DURATION = SECONDS_PER_BEAT / 2; // Colcheias
+
+  // Inicializa o AudioContext
   const initAudio = () => {
     if (!audioContextRef.current) {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       audioContextRef.current = new AudioCtx();
-      
-      const masterGain = audioContextRef.current.createGain();
-      masterGain.gain.value = 0.25; // Subtle background volume
-      masterGain.connect(audioContextRef.current.destination);
-      gainNodeRef.current = masterGain;
     }
   };
 
-  // Play a single synthesized guitar-like tone
-  const playTone = (time: number) => {
-    if (!audioContextRef.current || !gainNodeRef.current) return;
+  // --- SÍNTESE DO SOM DE VIOLÃO (Nylon) ---
+  const playGuitarString = (time: number, freq: number, isBass: boolean) => {
+    if (!audioContextRef.current) return;
     const ctx = audioContextRef.current;
-    
-    // Select random note from scale
-    const noteIndex = Math.floor(Math.random() * NOTES.length);
-    const freq = NOTES[noteIndex];
 
+    // 1. Oscilador (Fonte do som)
     const osc = ctx.createOscillator();
-    const noteGain = ctx.createGain();
-    
-    // Triangle wave mimics the harmonics of a plucked string reasonably well for this purpose
-    osc.type = 'triangle'; 
+    // Onda dente de serra suavizada soa mais rica que triangulo simples para cordas
+    osc.type = 'sawtooth'; 
     osc.frequency.value = freq;
 
-    // Envelope: Quick attack, long exponential decay
-    noteGain.gain.setValueAtTime(0, time);
-    noteGain.gain.linearRampToValueAtTime(0.1, time + 0.05); 
-    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 3.0);
+    // 2. Filtro (Corpo do som) - O segredo do som de violão
+    // O filtro corta os agudos estridentes, simulando o nylon
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.Q.value = 1; // Ressonância leve
 
-    osc.connect(noteGain);
-    noteGain.connect(gainNodeRef.current);
+    // 3. Controle de Volume (Envelope)
+    const gainNode = ctx.createGain();
+    const masterGain = ctx.createGain();
+    masterGain.gain.value = 0.15; // Volume geral baixo para fundo
+
+    // Conexões: Oscilador -> Filtro -> Gain -> Master -> Saída
+    osc.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(masterGain);
+    masterGain.connect(ctx.destination);
+
+    // --- ENVELOPES (O formato do som no tempo) ---
+    
+    // Envelope de Filtro (Simula a "batida" na corda)
+    // O filtro abre rápido e fecha devagar, imitando o timbre mudando
+    filter.frequency.setValueAtTime(isBass ? 400 : 800, time);
+    filter.frequency.exponentialRampToValueAtTime(isBass ? 100 : 300, time + 0.1); // Ataque percussivo
+    filter.frequency.linearRampToValueAtTime(isBass ? 50 : 150, time + 2); // Decay longo
+
+    // Envelope de Volume
+    gainNode.gain.setValueAtTime(0, time);
+    gainNode.gain.linearRampToValueAtTime(1, time + 0.02); // Ataque muito rápido
+    gainNode.gain.exponentialRampToValueAtTime(0.01, time + (isBass ? 3.5 : 2.5)); // Cordas graves soam por mais tempo
 
     osc.start(time);
-    osc.stop(time + 3.5);
+    osc.stop(time + 4); // Para depois de 4 segundos
   };
 
-  // Scheduler loop to queue notes
+  // --- AGENDADOR DE NOTAS ---
   const scheduler = useCallback(() => {
     if (!audioContextRef.current) return;
     
-    // Schedule notes up to 0.1s in advance
+    // Enquanto houver notas para tocar nos próximos 0.1s
     while (nextNoteTimeRef.current < audioContextRef.current.currentTime + 0.1) {
-      playTone(nextNoteTimeRef.current);
-      // Next note happens randomly between 0.8s and 2.5s for a natural, non-repetitive feel
-      nextNoteTimeRef.current += 0.8 + Math.random() * 1.7;
+      
+      // 1. Descobre qual nota tocar
+      const currentChord = CHORDS[currentChordIndexRef.current];
+      const stringIndex = ARPEGGIO_PATTERN[currentNoteIndexRef.current];
+      const freq = currentChord[stringIndex];
+      const isBass = stringIndex === 0;
+
+      // 2. Toca a nota
+      playGuitarString(nextNoteTimeRef.current, freq, isBass);
+
+      // 3. Avança o tempo para a próxima nota
+      nextNoteTimeRef.current += NOTE_DURATION;
+
+      // 4. Lógica de Sequenciamento (Próxima nota / Próximo acorde)
+      currentNoteIndexRef.current++;
+      
+      // Se terminou o padrão de dedilhado (6 notas)
+      if (currentNoteIndexRef.current >= ARPEGGIO_PATTERN.length) {
+        currentNoteIndexRef.current = 0;
+        
+        // A cada 2 repetições do padrão, muda o acorde (opcional, aqui muda a cada ciclo para fluidez)
+        currentChordIndexRef.current++;
+        if (currentChordIndexRef.current >= CHORDS.length) {
+          currentChordIndexRef.current = 0;
+        }
+      }
     }
+    
     timerIDRef.current = window.setTimeout(scheduler, 25);
   }, []);
 
@@ -80,13 +126,8 @@ export const BackgroundMusic: React.FC = () => {
     const ctx = audioContextRef.current;
     if (!ctx) return;
 
-    // Ensure context is running (browsers suspend it until interaction)
     if (ctx.state === 'suspended') {
-      try {
-        await ctx.resume();
-      } catch (err) {
-        // Ignore resume errors
-      }
+      await ctx.resume();
     }
     
     if (!timerIDRef.current) {
@@ -109,18 +150,16 @@ export const BackgroundMusic: React.FC = () => {
 
   const togglePlay = () => {
     if (isPlaying) {
-      isUserPausedRef.current = true;
       stopPlaying();
     } else {
-      isUserPausedRef.current = false;
       startPlaying();
     }
   };
 
-  // Setup auto-play on first interaction
+  // Auto-play na primeira interação
   useEffect(() => {
     const handleInteraction = () => {
-      if (!isUserPausedRef.current && !isPlaying && !timerIDRef.current) {
+      if (!isPlaying && !timerIDRef.current) {
         startPlaying();
       }
     };
@@ -128,14 +167,11 @@ export const BackgroundMusic: React.FC = () => {
     window.addEventListener('click', handleInteraction, { once: true });
     window.addEventListener('touchstart', handleInteraction, { once: true });
     window.addEventListener('scroll', handleInteraction, { once: true });
-    window.addEventListener('keydown', handleInteraction, { once: true });
 
     return () => {
       window.removeEventListener('click', handleInteraction);
       window.removeEventListener('touchstart', handleInteraction);
       window.removeEventListener('scroll', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
-      
       if (timerIDRef.current) clearTimeout(timerIDRef.current);
       if (audioContextRef.current) audioContextRef.current.close();
     };
@@ -175,7 +211,6 @@ export const BackgroundMusic: React.FC = () => {
           <div className="w-1 bg-wood-500 animate-[pulse_1s_ease-in-out_infinite] h-[40%]"></div>
           <div className="w-1 bg-wood-500 animate-[pulse_1.2s_ease-in-out_infinite] h-[100%]"></div>
           <div className="w-1 bg-wood-500 animate-[pulse_0.8s_ease-in-out_infinite] h-[60%]"></div>
-          <div className="w-1 bg-wood-500 animate-[pulse_1.5s_ease-in-out_infinite] h-[80%]"></div>
         </div>
       )}
     </div>
