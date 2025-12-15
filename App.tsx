@@ -1,8 +1,8 @@
-import React from 'react';
 import { Guitar } from './components/Guitar';
 import { Features } from './components/Features';
 import { Testimonials } from './components/Testimonials';
 import { Instructor } from './components/Instructor';
+import { FAQ } from './components/FAQ';
 import { CheckCircle, Phone, ArrowRight, Music2, Facebook, Instagram, Youtube } from 'lucide-react';
 
 const WHATSAPP_NUMBER = "5511999999999"; // Replace with real number
@@ -145,6 +145,9 @@ function App() {
 
       {/* Testimonials */}
       <Testimonials />
+
+      {/* FAQ Section */}
+      <FAQ />
 
       {/* About Instructor/CTA Strip */}
       <section className="bg-wood-900 py-24 text-white relative overflow-hidden">
