@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Award, Users, Music, Star } from 'lucide-react';
 
@@ -15,7 +16,7 @@ export const Instructor: React.FC = () => {
           <div className="relative group">
             <div className="absolute inset-0 bg-wood-600 rounded-2xl transform rotate-3 group-hover:rotate-6 transition-transform duration-300"></div>
             <img 
-              src="https://images.unsplash.com/photo-1549213768-18540306e4dc?auto=format&fit=crop&q=80&w=800" 
+              src="https://img.freepik.com/fotos-gratis/vista-frontal-de-um-musico-sorridente-tocando-violao-em-casa_23-2148846992.jpg?semt=ais_hybrid&w=740&q=80" 
               alt="Professor Alex tocando violão" 
               className="relative rounded-2xl shadow-2xl w-full h-[500px] object-cover border-4 border-white"
             />
